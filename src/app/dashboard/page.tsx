@@ -1,3 +1,5 @@
+'use client'
+
 import Link from 'next/link'
 import { FileText, DollarSign, Clock, TrendingUp, Plus, ArrowRight } from 'lucide-react'
 
