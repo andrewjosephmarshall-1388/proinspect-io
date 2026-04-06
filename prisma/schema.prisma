@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  companyName   String?
+  phone         String?
+  logoUrl       String?
+  primaryColor  String    @default("#2563EB")
+  stripeAccountId String?
+  stripeOnboarded Boolean @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  inspections   Inspection[]
+  clients       Client[]
+  templates     Template[]
+}
+
+model Client {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  email         String
+  phone         String?
+  address       String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inspections   Inspection[]
+}
+
+model Inspection {
+  id              String    @id @default(cuid())
+  userId          String
+  clientId        String
+  propertyAddress String
+  propertyCity    String?
+  propertyState   String?
+  propertyZip     String?
+  inspectionType  String
+  inspectionDate  DateTime?
+  status          String    @default("scheduled")
+  totalAmount     Float?
+  paidAmount      Float?
+  notes           String?
+  pdfUrl          String?
+  signedAt        DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client          Client    @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  sections        InspectionSection[]
+}
+
+model InspectionSection {
+  id            String    @id @default(cuid())
+  inspectionId  String
+  sectionName   String
+  sectionOrder  Int
+  condition     String?
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  inspection    Inspection @relation(fields: [inspectionId], references: [id], onDelete: Cascade)
+  photos        InspectionPhoto[]
+}
+
+model InspectionPhoto {
+  id            String    @id @default(cuid())
+  sectionId     String
+  url           String
+  caption       String?
+  sortOrder     Int       @default(0)
+  createdAt     DateTime  @default(now())
+
+  section       InspectionSection @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model Template {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  type          String
+  sections      String
+  isDefault     Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
