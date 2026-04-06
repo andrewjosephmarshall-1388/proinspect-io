@@ -106,7 +106,7 @@ export default function NewInspectionPage() {
 
   const handleSubmit = (e: any) => {
     e.preventDefault()
-    alert('Inspection created! (Demo - needs backend)')
+    // TODO: Save to backend database
     router.push('/dashboard/inspections')
   }
 
