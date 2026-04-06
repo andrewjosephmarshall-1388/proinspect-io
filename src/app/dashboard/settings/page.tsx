@@ -1,129 +1,40 @@
 'use client'
 import { useState } from 'react'
-import { Save, Upload, CreditCard, Building } from 'lucide-react'
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState({
-    companyName: 'Smith Home Inspections',
-    name: 'John Smith',
-    email: 'john@smithinspections.com',
-    phone: '(512) 555-1234',
-    primaryColor: '#2563EB',
-    platformFee: '5'
-  })
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSettings({ ...settings, [e.target.name]: e.target.value })
-  }
+  const [settings, setSettings] = useState({ companyName: 'Smith Home Inspections', name: 'John Smith', email: 'john@smithinspections.com', primaryColor: '#2563EB' })
 
   return (
-    <div className="settings-page">
-      <div className="page-header">
-        <h1 className="page-title">Settings</h1>
-      </div>
-
-      <div className="settings-grid">
-        <div className="card">
-          <h2>Profile Settings</h2>
-          <form className="settings-form">
-            <div className="form-group">
-              <label className="label">Company Name</label>
-              <input type="text" name="companyName" className="input" value={settings.companyName} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label className="label">Your Name</label>
-              <input type="text" name="name" className="input" value={settings.name} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label className="label">Email</label>
-              <input type="email" name="email" className="input" value={settings.email} onChange={handleChange} />
-            </div>
-            <div className="form-group">
-              <label className="label">Phone</label>
-              <input type="tel" name="phone" className="input" value={settings.phone} onChange={handleChange} />
-            </div>
-            <button type="button" className="btn btn-primary">
-              <Save size={18} />
-              Save Changes
-            </button>
-          </form>
-        </div>
-
-        <div className="card">
-          <h2>Branding</h2>
-          <div className="logo-upload">
-            <div className="logo-preview">
-              {settings.companyName.charAt(0)}
-            </div>
-            <div className="logo-actions">
-              <button className="btn btn-secondary">
-                <Upload size={18} />
-                Upload Logo
-              </button>
-              <p className="help-text">PNG or JPG, max 2MB. Recommended: 200x200px</p>
-            </div>
-          </div>
-          <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label className="label">Primary Color</label>
-            <div className="color-input">
-              <input type="color" name="primaryColor" value={settings.primaryColor} onChange={handleChange} />
-              <input type="text" name="primaryColor" className="input" value={settings.primaryColor} onChange={handleChange} style={{ width: '100px' }} />
-            </div>
+    <div>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>Settings</h1>
+      
+      <div style={{ display: 'grid', gap: '1.5rem', maxWidth: '600px' }}>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Profile Settings</h2>
+          <div style={{ display: 'grid', gap: '1rem' }}>
+            <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem' }}>Company Name</label><input value={settings.companyName} onChange={(e) => setSettings({...settings, companyName: e.target.value})} style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem' }}>Your Name</label><input value={settings.name} onChange={(e) => setSettings({...settings, name: e.target.value})} style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+            <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem' }}>Email</label><input value={settings.email} onChange={(e) => setSettings({...settings, email: e.target.value})} style={{ width: '100%', padding: '0.625rem', border: '1px solid #d1d5db', borderRadius: '0.5rem' }} /></div>
+            <button style={{ padding: '0.625rem 1.25rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', background: '#2563eb', color: 'white', width: 'fit-content' }}>Save Changes</button>
           </div>
         </div>
 
-        <div className="card">
-          <h2>
-            <CreditCard size={20} />
-            Stripe Connect
-          </h2>
-          <div className="stripe-status">
-            <div className="status-info">
-              <span className="status-label">Connection Status</span>
-              <span className="status-value connected">Connected</span>
-            </div>
-            <button className="btn btn-secondary">Manage Stripe Account</button>
-          </div>
-          <div className="form-group" style={{ marginTop: '1rem' }}>
-            <label className="label">Platform Fee (%)</label>
-            <input type="number" name="platformFee" className="input" value={settings.platformFee} onChange={handleChange} style={{ width: '100px' }} />
-            <p className="help-text">Fee taken from each payment</p>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Branding</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ width: '60px', height: '60px', background: settings.primaryColor, borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700, fontSize: '1.5rem' }}>{settings.companyName.charAt(0)}</div>
+            <div><label style={{ display: 'block', fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.375rem' }}>Primary Color</label><input type="color" value={settings.primaryColor} onChange={(e) => setSettings({...settings, primaryColor: e.target.value})} style={{ width: '40px', height: '40px' }} /></div>
           </div>
         </div>
 
-        <div className="card">
-          <h2>
-            <Building size={20} />
-            Business Details
-          </h2>
-          <p className="help-text">Business information shown on reports</p>
-          <div className="form-group">
-            <label className="label">Business Address</label>
-            <input type="text" className="input" placeholder="123 Main St, Austin, TX 78701" />
-          </div>
-          <div className="form-group">
-            <label className="label">License Number</label>
-            <input type="text" className="input" placeholder="TREC #12345" />
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.75rem', boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1)' }}>
+          <h2 style={{ fontSize: '1.125rem', fontWeight: 600, marginBottom: '1rem' }}>Stripe Connect</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', background: '#f9fafb', borderRadius: '0.5rem' }}>
+            <div><span style={{ display: 'block', fontSize: '0.875rem', color: '#6b7280' }}>Connection Status</span><span style={{ fontWeight: 600, color: '#10b981' }}>Connected</span></div>
+            <button style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 500, border: '1px solid #d1d5db', background: '#fff' }}>Manage</button>
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .settings-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; }
-        .card h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.125rem; font-weight: 600; margin-bottom: 1.25rem; }
-        .settings-form { display: flex; flex-direction: column; gap: 1rem; }
-        .form-group { display: flex; flex-direction: column; }
-        .logo-upload { display: flex; gap: 1.5rem; align-items: center; }
-        .logo-preview { width: 80px; height: 80px; background: var(--primary); color: white; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 700; }
-        .help-text { font-size: 0.875rem; color: var(--gray-500); margin-top: 0.25rem; }
-        .color-input { display: flex; align-items: center; gap: 0.75rem; }
-        .color-input input[type="color"] { width: 40px; height: 40px; border: none; border-radius: 0.5rem; cursor: pointer; }
-        .stripe-status { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; }
-        .status-info { display: flex; flex-direction: column; }
-        .status-label { font-size: 0.875rem; color: var(--gray-500); }
-        .status-value { font-weight: 600; }
-        .status-value.connected { color: var(--success); }
-      `}</style>
     </div>
   )
 }

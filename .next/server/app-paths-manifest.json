@@ -4,8 +4,8 @@
   "/auth/signup/page": "app/auth/signup/page.js",
   "/page": "app/page.js",
   "/dashboard/inspections/new/page": "app/dashboard/inspections/new/page.js",
+  "/dashboard/inspections/page": "app/dashboard/inspections/page.js",
   "/dashboard/settings/page": "app/dashboard/settings/page.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/dashboard/clients/page": "app/dashboard/clients/page.js",
-  "/dashboard/inspections/page": "app/dashboard/inspections/page.js"
+  "/dashboard/clients/page": "app/dashboard/clients/page.js"
 }
