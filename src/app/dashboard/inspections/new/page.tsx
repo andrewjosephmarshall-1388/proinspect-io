@@ -104,10 +104,27 @@ export default function NewInspectionPage() {
     }
   }
 
-  const handleSubmit = (e: any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
-    // TODO: Save to backend database
-    router.push('/dashboard/inspections')
+    
+    try {
+      const res = await fetch('/api/inspections', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
+      
+      const data = await res.json()
+      
+      if (data.success) {
+        router.push('/dashboard/inspections')
+      } else {
+        alert('Error saving inspection: ' + data.error)
+      }
+    } catch (err) {
+      console.error('Failed to save:', err)
+      alert('Failed to save inspection')
+    }
   }
 
   const inspectionTypes = ['Standard Home', 'HVAC', 'Termite/WDO', '4-Point', 'Commercial', 'Roof', 'Wind Mitigation', 'Pool/Spa']
