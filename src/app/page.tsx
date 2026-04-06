@@ -64,21 +64,10 @@ export default function Home() {
         <div className="container">
           <h2 className="section-title">Simple, Transparent Pricing</h2>
           <div className="pricing-grid">
-            <div className="pricing-card">
-              <h3>Starter</h3>
-              <div className="price">$49<span>/month</span></div>
-              <ul className="pricing-features">
-                <li><Check className="check" /> 10 inspections/month</li>
-                <li><Check className="check" /> PDF reports</li>
-                <li><Check className="check" /> Client portal</li>
-                <li><Check className="check" /> Email support</li>
-              </ul>
-              <Link href="/auth/signup" className="btn btn-primary btn-block">Get Started</Link>
-            </div>
             <div className="pricing-card featured">
               <div className="badge">Most Popular</div>
               <h3>Professional</h3>
-              <div className="price">$99<span>/month</span></div>
+              <div className="price">$50<span>/month</span></div>
               <ul className="pricing-features">
                 <li><Check className="check" /> Unlimited inspections</li>
                 <li><Check className="check" /> PDF reports with photos</li>
@@ -90,7 +79,7 @@ export default function Home() {
             </div>
             <div className="pricing-card">
               <h3>Business</h3>
-              <div className="price">$199<span>/month</span></div>
+              <div className="price">$100<span>/month</span></div>
               <ul className="pricing-features">
                 <li><Check className="check" /> Everything in Professional</li>
                 <li><Check className="check" /> Multiple inspectors</li>
