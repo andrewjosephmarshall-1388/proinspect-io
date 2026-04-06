@@ -29,6 +29,7 @@ const CANADIAN_PROVINCES = [
 
 export default function NewInspectionPage() {
   const router = useRouter()
+  const [lookingUp, setLookingUp] = useState(false)
   const [form, setForm] = useState({
     propertyAddress: '',
     propertyCity: '',
@@ -44,12 +45,54 @@ export default function NewInspectionPage() {
   const handleChange = (e: any) => {
     const { name, value } = e.target
     setForm(prev => ({ ...prev, [name]: value }))
+    
+    // Auto-populate city and state when zip is entered
     if (name === 'propertyZip' && value.length >= 5) {
-      fetchZip(value)
+      lookupZip(value)
     }
+    
+    // Update map and Zillow links
     if (['propertyAddress', 'propertyCity', 'propertyState', 'propertyZip'].includes(name)) {
       updateLinks()
     }
+  }
+
+  const lookupZip = async (zip: string) => {
+    setLookingUp(true)
+    try {
+      // Try US first
+      let resp = await fetch(`https://api.zippopotam.us/us/${zip}`)
+      if (resp.ok) {
+        const data = await resp.json()
+        const place = data.places[0]
+        setForm(prev => ({
+          ...prev,
+          propertyCity: place['place name'],
+          propertyState: place['USPS state code']
+        }))
+        updateLinks()
+        setLookingUp(false)
+        return
+      }
+      
+      // Try Canada
+      resp = await fetch(`https://api.zippopotam.us/ca/${zip}`)
+      if (resp.ok) {
+        const data = await resp.json()
+        const place = data.places[0]
+        setForm(prev => ({
+          ...prev,
+          propertyCity: place['place name'],
+          propertyState: place['admin code 1']
+        }))
+        updateLinks()
+        setLookingUp(false)
+        return
+      }
+    } catch (e) {
+      console.log('Zip lookup failed:', e)
+    }
+    setLookingUp(false)
   }
 
   const updateLinks = () => {
@@ -61,24 +104,9 @@ export default function NewInspectionPage() {
     }
   }
 
-  const fetchZip = async (zip: string) => {
-    try {
-      const resp = await fetch(`https://api.zippopotam.us/us/${zip}`)
-      if (resp.ok) {
-        const data = await resp.json()
-        const place = data.places[0]
-        setForm(prev => ({
-          ...prev,
-          propertyCity: place['place name'],
-          propertyState: place['USPS state code']
-        }))
-        updateLinks()
-      }
-    } catch (_) {}
-  }
-
   const handleSubmit = (e: any) => {
     e.preventDefault()
+    alert('Inspection created! (Demo - needs backend)')
     router.push('/dashboard/inspections')
   }
 
@@ -86,34 +114,133 @@ export default function NewInspectionPage() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <Link href="/dashboard/inspections" style={{ display: 'block', marginBottom: '1rem' }}>← Back to Inspections</Link>
-      <h1>New Inspection</h1>
+      <Link href="/dashboard/inspections" style={{ display: 'block', marginBottom: '1rem', color: '#6b7280' }}>← Back to Inspections</Link>
+      <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>New Inspection</h1>
+      
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: '600px' }}>
-        <input name="propertyAddress" placeholder="Address" value={form.propertyAddress} onChange={handleChange} />
-        <input name="propertyCity" placeholder="City" value={form.propertyCity} onChange={handleChange} />
-        <select name="propertyState" value={form.propertyState} onChange={handleChange}>
-          <option value="">Select State / Province</option>
-          <optgroup label="United States">
-            {US_STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
-          </optgroup>
-          <optgroup label="Canada">
-            {CANADIAN_PROVINCES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
-          </optgroup>
-        </select>
-        <input name="propertyZip" placeholder="ZIP / Postal" value={form.propertyZip} onChange={handleChange} />
-        <select name="inspectionType" value={form.inspectionType} onChange={handleChange}>
-          {inspectionTypes.map(t => <option key={t} value={t}>{t}</option>)}
-        </select>
-        <input name="clientName" placeholder="Client Name" value={form.clientName} onChange={handleChange} />
-        <input name="clientEmail" placeholder="Client Email" value={form.clientEmail} onChange={handleChange} />
-        <button type="submit" style={{ padding: '0.5rem', background: '#2563eb', color: 'white', border: 'none' }}>Create Inspection</button>
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Property Address</h2>
+          <input 
+            name="propertyAddress" 
+            placeholder="Street Address" 
+            value={form.propertyAddress} 
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+            <input 
+              name="propertyCity" 
+              placeholder="City" 
+              value={form.propertyCity} 
+              onChange={handleChange}
+              style={{ padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+            />
+            <div>
+              <select 
+                name="propertyState" 
+                value={form.propertyState} 
+                onChange={handleChange}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+              >
+                <option value="">State</option>
+                <optgroup label="United States">
+                  {US_STATES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+                </optgroup>
+                <optgroup label="Canada">
+                  {CANADIAN_PROVINCES.map(s => <option key={s.code} value={s.code}>{s.name}</option>)}
+                </optgroup>
+              </select>
+            </div>
+            <div style={{ position: 'relative' }}>
+              <input 
+                name="propertyZip" 
+                placeholder={lookingUp ? "Looking up..." : "ZIP Code"} 
+                value={form.propertyZip} 
+                onChange={handleChange}
+                style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+                disabled={lookingUp}
+              />
+              {lookingUp && <span style={{ position: 'absolute', right: '8px', top: '8px', fontSize: '0.75rem', color: '#2563eb' }}>⏳</span>}
+            </div>
+          </div>
+          <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
+            💡 Enter a ZIP code to auto-fill city and state
+          </p>
+        </div>
+
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Inspection Details</h2>
+          <select 
+            name="inspectionType" 
+            value={form.inspectionType} 
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+          >
+            {inspectionTypes.map(t => <option key={t} value={t}>{t}</option>)}
+          </select>
+        </div>
+
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Client Information</h2>
+          <input 
+            name="clientName" 
+            placeholder="Client Name" 
+            value={form.clientName} 
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.5rem', marginBottom: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+          />
+          <input 
+            name="clientEmail" 
+            placeholder="Client Email" 
+            value={form.clientEmail} 
+            onChange={handleChange}
+            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link 
+            href="/dashboard/inspections" 
+            style={{ padding: '0.625rem 1.25rem', borderRadius: '0.5rem', fontWeight: 500, border: '1px solid #d1d5db', background: '#fff', textDecoration: 'none' }}
+          >
+            Cancel
+          </Link>
+          <button 
+            type="submit" 
+            style={{ padding: '0.625rem 1.25rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', background: '#2563eb', color: 'white', cursor: 'pointer' }}
+          >
+            Create Inspection
+          </button>
+        </div>
       </form>
+
       {mapUrl && (
-        <div style={{ marginTop: '2rem' }}>
-          <h2>Location</h2>
-          <iframe src={mapUrl} width="100%" height="300" style={{ border: 0 }} loading="lazy"></iframe>
-          <p><a href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(form.propertyAddress + ' ' + form.propertyCity + ' ' + form.propertyState + ' ' + form.propertyZip)}`} target="_blank" rel="noopener noreferrer">Get Driving Directions</a></p>
-          {zillowUrl && <p><a href={zillowUrl} target="_blank" rel="noopener noreferrer">View on Zillow</a></p>}
+        <div style={{ marginTop: '2rem', background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Location & Property Info</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div>
+              <iframe src={mapUrl} width="100%" height="250" style={{ border: 0, borderRadius: '0.25rem' }} loading="lazy"></iframe>
+              <a 
+                href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(form.propertyAddress + ' ' + form.propertyCity + ' ' + form.propertyState + ' ' + form.propertyZip)}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ display: 'inline-block', marginTop: '0.5rem', color: '#2563eb', textDecoration: 'none' }}
+              >
+                🚗 Get Driving Directions
+              </a>
+            </div>
+            <div style={{ background: '#f3f4f6', padding: '1rem', borderRadius: '0.5rem' }}>
+              <p style={{ fontSize: '0.875rem', fontWeight: 500, marginBottom: '0.5rem' }}>Property Details</p>
+              <a 
+                href={zillowUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ display: 'inline-block', padding: '0.5rem 1rem', background: '#006aff', color: 'white', borderRadius: '0.25rem', textDecoration: 'none', fontSize: '0.875rem' }}
+              >
+                🏠 View on Zillow
+              </a>
+            </div>
+          </div>
         </div>
       )}
     </div>
