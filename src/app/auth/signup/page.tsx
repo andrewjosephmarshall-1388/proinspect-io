@@ -28,7 +28,16 @@ export default function SignupPage() {
       return
     }
 
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters')
+      setLoading(false)
+      return
+    }
+
     try {
+      console.log('Attempting signup with:', { email: formData.email })
+      console.log('Supabase URL:', supabase.supabaseUrl)
+      
       // Sign up the user with Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
@@ -41,6 +50,8 @@ export default function SignupPage() {
         }
       })
 
+      console.log('Signup response:', { data, signUpError })
+
       if (signUpError) {
         setError(signUpError.message)
       } else if (data.user) {
@@ -50,10 +61,13 @@ export default function SignupPage() {
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
+      } else {
+        // No user and no error - likely email confirmation required
+        setSuccess(true)
       }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.')
+    } catch (err: any) {
       console.error('Signup error:', err)
+      setError(err.message || 'An unexpected error occurred. Please try again.')
     }
     
     setLoading(false)

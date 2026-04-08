@@ -1,18 +1,24 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
 
-let supabase: SupabaseClient
+let supabaseInstance: SupabaseClient | null = null
 
 function getSupabaseClient(): SupabaseClient {
-  if (!supabase) {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    supabase = createClient(supabaseUrl, supabaseKey)
+  if (!supabaseInstance) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables!')
+      throw new Error('Supabase environment variables not configured')
+    }
+    
+    supabaseInstance = createClient(supabaseUrl, supabaseKey)
   }
-  return supabase
+  return supabaseInstance
 }
 
-// Re-export createClient for use in components
+// Export as createClient function for use in components
 export const createClient = getSupabaseClient
 
-// Also export the supabase instance directly
-export const supabase = createClient
+// Export supabase instance
+export const supabase = getSupabaseClient()
