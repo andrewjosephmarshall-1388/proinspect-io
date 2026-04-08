@@ -1,6 +1,6 @@
 # ProInspect.io
 
-Professional home inspection software platform.
+Professional home inspection software platform .
 
 ## Features
 
