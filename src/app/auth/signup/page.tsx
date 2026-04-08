@@ -13,7 +13,7 @@ export default function SignupPage() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
 
-  // Initialize Supabase client
+  // Initialize Supabase client - updated deployment
   useEffect(() => {
     try {
       const client = createClient()
