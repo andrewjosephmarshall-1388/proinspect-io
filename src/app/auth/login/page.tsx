@@ -1,25 +1,62 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase'
 
 export default function LoginPage() {
   const router = useRouter()
+  const [supabase, setSupabase] = useState<any>(null)
+  const [initError, setInitError] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    try {
+      const client = createClient()
+      setSupabase(client)
+    } catch (err: any) {
+      setInitError(err.message)
+    }
+  }, [])
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!supabase) {
+      setError('Supabase not initialized. Please refresh.')
+      return
+    }
+    
     setLoading(true)
     setError('')
     
-    if (email && password) {
-      router.push('/dashboard')
-    } else {
+    if (!email || !password) {
       setError('Please fill in all fields')
+      setLoading(false)
+      return
     }
+
+    try {
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      })
+
+      if (signInError) {
+        setError(signInError.message)
+      } else if (data.user) {
+        // Successfully logged in
+        router.push('/dashboard')
+      } else {
+        setError('Login failed. Please try again.')
+      }
+    } catch (err: any) {
+      setError(err.message || 'An unexpected error occurred')
+    }
+    
     setLoading(false)
   }
 
@@ -30,17 +67,33 @@ export default function LoginPage() {
         <h1>Welcome back</h1>
         <p className="auth-subtitle">Sign in to your account</p>
         
+        {initError && <div className="error">Error: {initError}</div>}
+        
         <form onSubmit={handleSubmit} className="auth-form">
           {error && <div className="error">{error}</div>}
           
           <div className="form-group">
             <label className="label">Email</label>
-            <input type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" />
+            <input 
+              type="email" 
+              className="input" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="you@company.com"
+              required
+            />
           </div>
           
           <div className="form-group">
             <label className="label">Password</label>
-            <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" />
+            <input 
+              type="password" 
+              className="input" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="••••••••"
+              required
+            />
           </div>
           
           <button type="submit" className="btn btn-primary btn-full" disabled={loading}>
@@ -49,7 +102,7 @@ export default function LoginPage() {
         </form>
         
         <p className="auth-footer">
-          Don't have an account? <Link href="/auth/signup">Start free trial</Link>
+          Don't have an account? <Link href="/auth/signup">Sign up</Link>
         </p>
       </div>
 
@@ -61,6 +114,13 @@ export default function LoginPage() {
         .auth-subtitle { text-align: center; color: var(--gray-500); margin-bottom: 1.5rem; }
         .auth-form { display: flex; flex-direction: column; gap: 1rem; }
         .form-group { display: flex; flex-direction: column; }
+        .label { font-size: 0.875rem; font-weight: 500; margin-bottom: 0.375rem; }
+        .input { padding: 0.75rem; border: 1px solid var(--gray-200); border-radius: 0.5rem; font-size: 1rem; }
+        .input:focus { outline: none; border-color: var(--primary); }
+        .btn { padding: 0.75rem 1rem; border-radius: 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: var(--primary); color: white; border: none; }
+        .btn-primary:hover { opacity: 0.9; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .btn-full { width: 100%; }
         .error { background: #FEF2F2; color: var(--danger); padding: 0.75rem; border-radius: 0.5rem; font-size: 0.875rem; }
         .auth-footer { text-align: center; margin-top: 1.5rem; color: var(--gray-500); font-size: 0.875rem; }
