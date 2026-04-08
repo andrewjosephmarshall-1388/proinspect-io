@@ -1,16 +1,29 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 
 export default function SignupPage() {
   const router = useRouter()
-  const supabase = createClient()
+  const [supabase, setSupabase] = useState<any>(null)
+  const [initError, setInitError] = useState('')
   const [formData, setFormData] = useState({ name: '', email: '', password: '', companyName: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+
+  // Initialize Supabase client
+  useEffect(() => {
+    try {
+      const client = createClient()
+      setSupabase(client)
+      console.log('Supabase client initialized:', client.supabaseUrl)
+    } catch (err: any) {
+      console.error('Failed to init Supabase:', err)
+      setInitError(err.message)
+    }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value })
@@ -18,6 +31,12 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!supabase) {
+      setError('Supabase not initialized. Please refresh the page.')
+      return
+    }
+    
     setLoading(true)
     setError('')
     setSuccess(false)
@@ -38,7 +57,6 @@ export default function SignupPage() {
       console.log('Attempting signup with:', { email: formData.email })
       console.log('Supabase URL:', supabase.supabaseUrl)
       
-      // Sign up the user with Supabase Auth
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
         password: formData.password,
@@ -53,20 +71,25 @@ export default function SignupPage() {
       console.log('Signup response:', { data, signUpError })
 
       if (signUpError) {
+        console.error('Signup error:', signUpError)
         setError(signUpError.message)
       } else if (data.user) {
-        // User created successfully
+        console.log('User created:', data.user)
         setSuccess(true)
-        // Optionally redirect to login after a delay
         setTimeout(() => {
           router.push('/auth/login')
         }, 3000)
+      } else if (data.session) {
+        // User was created and auto-confirmed (no email confirmation)
+        console.log('Auto-confirmed, session:', data.session)
+        router.push('/dashboard')
       } else {
-        // No user and no error - likely email confirmation required
+        // No user, no error - email confirmation required
+        console.log('Email confirmation required')
         setSuccess(true)
       }
     } catch (err: any) {
-      console.error('Signup error:', err)
+      console.error('Signup exception:', err)
       setError(err.message || 'An unexpected error occurred. Please try again.')
     }
     
@@ -79,6 +102,8 @@ export default function SignupPage() {
         <Link href="/" className="auth-logo">ProInspect.io</Link>
         <h1>Create your account</h1>
         <p className="auth-subtitle">Start your 14-day free trial</p>
+        
+        {initError && <div className="error">Init Error: {initError}</div>}
         
         {success ? (
           <div className="success-message">
