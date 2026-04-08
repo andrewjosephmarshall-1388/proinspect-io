@@ -18,7 +18,7 @@ export default function SignupPage() {
     try {
       const client = createClient()
       setSupabase(client)
-      console.log('Supabase client initialized:', client.supabaseUrl)
+      console.log('Supabase client initialized')
     } catch (err: any) {
       console.error('Failed to init Supabase:', err)
       setInitError(err.message)
@@ -55,7 +55,6 @@ export default function SignupPage() {
 
     try {
       console.log('Attempting signup with:', { email: formData.email })
-      console.log('Supabase URL:', supabase.supabaseUrl)
       
       const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
