@@ -1,14 +1,14 @@
-'use client'
-import { useState } from 'react'
 import Link from 'next/link'
-import { Plus, Search } from 'lucide-react'
+import { Plus } from 'lucide-react'
+import { createClient } from '@/utils/supabase/server'
 
-export default function InspectionsPage() {
-  const inspections = [
-    { id: '1', address: '123 Oak Street, Austin, TX', type: 'Standard Home', client: 'Sarah Johnson', status: 'Completed', date: '2026-04-05', amount: 450 },
-    { id: '2', address: '456 Maple Ave, Austin, TX', type: '4-Point', client: 'Mike Peters', status: 'In Progress', date: '2026-04-05', amount: 250 },
-    { id: '3', address: '789 Pine Road, Austin, TX', type: 'HVAC', client: 'Emily Davis', status: 'Scheduled', date: '2026-04-06', amount: 350 },
-  ]
+export default async function InspectionsPage() {
+  const supabase = await createClient()
+  
+  const { data: inspections } = await supabase
+    .from('inspections')
+    .select('*, clients(name)')
+    .order('created_at', { ascending: false })
 
   return (
     <div>
@@ -29,17 +29,28 @@ export default function InspectionsPage() {
             </tr>
           </thead>
           <tbody>
-            {inspections.map((insp) => (
+            {inspections?.map((insp) => (
               <tr key={insp.id}>
-                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}><Link href={`/dashboard/inspections/${insp.id}`} style={{ fontWeight: 500 }}>{insp.address}</Link></td>
-                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>{insp.type}</td>
-                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>{insp.client}</td>
-                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}><span style={{ fontSize: '0.75rem', fontWeight: 500, padding: '0.25rem 0.75rem', borderRadius: '1rem', background: insp.status === 'Completed' ? '#ecfdf5' : '#eff6ff', color: insp.status === 'Completed' ? '#10b981' : '#2563eb' }}>{insp.status}</span></td>
-                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>${insp.amount}</td>
+                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>
+                  <Link href={`/dashboard/inspections/${insp.id}`} style={{ fontWeight: 500 }}>
+                    {insp.property_address}{insp.property_city ? `, ${insp.property_city}` : ''}{insp.property_state ? `, ${insp.property_state}` : ''}
+                  </Link>
+                </td>
+                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>{insp.inspection_type}</td>
+                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>{insp.clients?.name || 'N/A'}</td>
+                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 500, padding: '0.25rem 0.75rem', borderRadius: '1rem', background: insp.status === 'completed' ? '#ecfdf5' : '#eff6ff', color: insp.status === 'completed' ? '#10b981' : '#2563eb' }}>
+                    {insp.status}
+                  </span>
+                </td>
+                <td style={{ padding: '1rem', borderBottom: '1px solid #f3f4f6' }}>${insp.total_amount || 0}</td>
               </tr>
             ))}
           </tbody>
         </table>
+        {(!inspections || inspections.length === 0) && (
+          <p style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>No inspections yet. Create your first one!</p>
+        )}
       </div>
     </div>
   )

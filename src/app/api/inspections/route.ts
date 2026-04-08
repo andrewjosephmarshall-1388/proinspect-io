@@ -1,22 +1,29 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/utils/supabase/server'
 
 export async function POST(request: NextRequest) {
+  const supabase = await createClient()
+  
+  // Get the actual logged-in user
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  
+  if (userError || !user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+  
   try {
     const body = await request.json()
     const { propertyAddress, propertyCity, propertyState, propertyZip, inspectionType, clientName, clientEmail } = body
 
-    // For demo, use a demo user. In production, get userId from session
-    const userId = 'demo-user-id'
-    
-    // First, get or create the client
+    // First, get or create the client for this user
     let clientId = ''
     
-    // Check if client exists
+    // Check if client exists for this user
     const { data: existingClient } = await supabase
       .from('clients')
       .select('id')
       .eq('email', clientEmail)
+      .eq('user_id', user.id)
       .single()
     
     if (existingClient) {
@@ -26,7 +33,7 @@ export async function POST(request: NextRequest) {
       const { data: newClient, error: clientError } = await supabase
         .from('clients')
         .insert({
-          user_id: userId,
+          user_id: user.id,
           name: clientName,
           email: clientEmail
         })
@@ -35,7 +42,6 @@ export async function POST(request: NextRequest) {
       
       if (clientError) {
         console.error('Client error:', clientError)
-        // Continue anyway
       }
       
       if (newClient) {
@@ -43,12 +49,12 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the inspection
+    // Create the inspection with the actual user's ID
     const { data: inspection, error } = await supabase
       .from('inspections')
       .insert({
-        user_id: userId,
-        client_id: clientId || 'demo-client-id',
+        user_id: user.id,
+        client_id: clientId,
         property_address: propertyAddress,
         property_city: propertyCity,
         property_state: propertyState,
@@ -72,10 +78,20 @@ export async function POST(request: NextRequest) {
 }
 
 export async function GET() {
-  // Fetch inspections for demo user
+  const supabase = await createClient()
+  
+  // Get the actual logged-in user
+  const { data: { user } } = await supabase.auth.getUser()
+  
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
+  }
+  
+  // Fetch only the logged-in user's inspections
   const { data, error } = await supabase
     .from('inspections')
-    .select('*')
+    .select('*, clients(name)')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false })
 
   if (error) {

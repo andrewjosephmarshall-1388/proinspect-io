@@ -1,12 +1,31 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { Home, FileText, Users, Settings, LogOut, Menu, X, Plus, Search } from 'lucide-react'
+import { usePathname, useRouter } from 'next/navigation'
+import { Home, FileText, Users, Settings, LogOut, Plus, Search } from 'lucide-react'
+import { createBrowserClientFromParams } from '@/utils/supabase/client'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const router = useRouter()
+  const supabase = createBrowserClientFromParams()
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) {
+        router.push('/auth/login')
+      } else if (user.email) {
+        setUserEmail(user.email)
+      }
+    })
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard' },
@@ -14,6 +33,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     { href: '/dashboard/clients', label: 'Clients' },
     { href: '/dashboard/settings', label: 'Settings' },
   ]
+
+  const getInitials = (email: string) => {
+    if (!email) return 'U'
+    const parts = email.split('@')[0].split('.')
+    return parts.map(p => p[0]).join('').toUpperCase().slice(0, 2)
+  }
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
@@ -31,9 +56,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </nav>
 
         <div style={{ padding: '1rem', borderTop: '1px solid #1f2937' }}>
-          <Link href="/auth/login" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: '#9ca3af' }}>
+          <button onClick={handleSignOut} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.75rem 1rem', borderRadius: '0.5rem', color: '#9ca3af', background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', fontSize: '1rem' }}>
             <span>Logout</span>
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -48,7 +73,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Link href="/dashboard/inspections/new" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.625rem 1.25rem', borderRadius: '0.5rem', fontWeight: 500, border: 'none', background: '#2563eb', color: 'white' }}>
               <Plus size={18} />New Inspection
             </Link>
-            <div style={{ width: '2.25rem', height: '2.25rem', background: '#2563eb', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>JD</div>
+            <div style={{ width: '2.25rem', height: '2.25rem', background: '#2563eb', color: 'white', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, fontSize: '0.875rem' }}>{getInitials(userEmail)}</div>
           </div>
         </header>
 
