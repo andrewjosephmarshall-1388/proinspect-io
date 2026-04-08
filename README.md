@@ -12,7 +12,7 @@ Professional home inspection software platform.
 
 ## Tech Stack
 
-- Next.js 14 (App Router)
+- Next.js 14  (App Router)
 - PostgreSQL + Prisma
 - NextAuth.js
 - Stripe Connect
