@@ -1,4 +1,4 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js'
+import { createClient as createSupabaseClient, SupabaseClient } from '@supabase/supabase-js'
 
 let supabaseInstance: SupabaseClient | null = null
 
@@ -12,7 +12,7 @@ function getSupabaseClient(): SupabaseClient {
       throw new Error('Supabase environment variables not configured')
     }
     
-    supabaseInstance = createClient(supabaseUrl, supabaseKey)
+    supabaseInstance = createSupabaseClient(supabaseUrl, supabaseKey)
   }
   return supabaseInstance
 }
