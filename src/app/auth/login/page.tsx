@@ -49,7 +49,8 @@ export default function LoginPage() {
         setError(signInError.message)
       } else if (data.user) {
         // Successfully logged in
-        router.push('/dashboard')
+        await router.push('/dashboard')
+        router.refresh()
       } else {
         setError('Login failed. Please try again.')
       }
