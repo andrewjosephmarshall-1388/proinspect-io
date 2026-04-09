@@ -6,6 +6,7 @@ import { ArrowLeft, Plus, Trash2, Save, GripVertical } from 'lucide-react'
 import { createClient } from '@/lib/supabase'
 
 interface TemplateItem {
+  id?: string
   category: string
   item_text: string
   condition?: string
