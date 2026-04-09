@@ -18,11 +18,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   useEffect(() => {
     if (!supabase) return
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
+    supabase.auth.getUser().then(({ data }: { data: { user: any } }) => {
+      if (!data?.user) {
         router.push('/auth/login')
-      } else if (user.email) {
-        setUserEmail(user.email)
+      } else if (data.user.email) {
+        setUserEmail(data.user.email)
       }
       setLoading(false)
     })
