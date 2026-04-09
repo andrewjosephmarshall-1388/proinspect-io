@@ -4,11 +4,13 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import { CheckCircle, XCircle, Clock } from 'lucide-react'
+import { pdf, Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
 
 export default function InspectionDetailPage() {
   const params = useParams()
   const [inspection, setInspection] = useState<any>(null)
   const [items, setItems] = useState<any[]>([])
+  const [completedItems, setCompletedItems] = useState<any[]>([])
   const [saving, setSaving] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -69,6 +71,7 @@ export default function InspectionDetailPage() {
   if (!inspection) return <div style={{ padding: '2rem' }}>Inspection not found</div>
 
   async function saveReport() {
+      // ... existing code unchanged ...
       setSaving(true)
       const supabase = createClient()
       // Delete existing items for this inspection (if any)
@@ -88,9 +91,51 @@ export default function InspectionDetailPage() {
       }
       // Update inspection status to completed
       await supabase.from('inspections').update({ status: 'completed' }).eq('id', inspection.id)
+      // Store completed items locally for PDF generation
+      setCompletedItems(items)
       setSaving(false)
       alert('Report saved!')
     }
+
+    // Generate a PDF report using @react-pdf/renderer
+    const generatePdf = async () => {
+      if (!inspection) return
+      // Simple PDF layout
+      const MyDoc = () => (
+        <Document>
+          <Page style={styles.page}>
+            <View>
+              <Text style={styles.title}>Inspection Report</Text>
+              <Text>Property: {inspection.property_address}</Text>
+              <Text>Client: {inspection.clients?.name || '—'}</Text>
+              <Text>Date: {new Date().toLocaleDateString()}</Text>
+            </View>
+            <View style={{ marginTop: 20 }}>
+              {completedItems.map((it, i) => (
+                <View key={i} style={styles.item}>
+                  <Text style={styles.itemCategory}>{it.category}</Text>
+                  <Text>{it.item_text}</Text>
+                  <Text>Condition: {it.condition || '—'}</Text>
+                  <Text>Notes: {it.notes || ''}</Text>
+                </View>
+              ))}
+            </View>
+          </Page>
+        </Document>
+      )
+
+      const blob = await pdf(<MyDoc />).toBlob()
+      const url = URL.createObjectURL(blob)
+      // Open PDF in new tab
+      window.open(url, '_blank')
+    }
+
+    const styles = StyleSheet.create({
+      page: { padding: 30 },
+      title: { fontSize: 24, marginBottom: 12 },
+      item: { marginBottom: 10 },
+      itemCategory: { fontWeight: 'bold' }
+    })
 
     return (
     <div style={{ padding: '2rem' }}>
@@ -179,7 +224,12 @@ export default function InspectionDetailPage() {
         {inspection.status === 'completed' && (
           <div style={{ marginTop: '2rem', background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
             <h2 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '1rem' }}>Completed Report</h2>
-            <p>Report has been saved. You can view the details in the PDF export (coming soon).</p>
+            <button 
+              onClick={generatePdf}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.25rem', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer' }}
+            >
+              📄 Generate PDF
+            </button>
           </div>
         )}
       </div>
