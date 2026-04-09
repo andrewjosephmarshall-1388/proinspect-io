@@ -48,10 +48,9 @@ export default function LoginPage() {
       if (signInError) {
         setError(signInError.message)
       } else if (data.user) {
-        // Wait a moment for cookie to be set, then redirect
-        setTimeout(() => {
-          window.location.href = '/dashboard'
-        }, 100)
+        // Use window.location with full URL
+        const baseUrl = window.location.origin
+        window.location.href = baseUrl + '/dashboard'
       } else {
         setError('Login failed. Please try again.')
       }
