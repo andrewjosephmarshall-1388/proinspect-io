@@ -1,5 +1,6 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
@@ -30,6 +31,8 @@ const CANADIAN_PROVINCES = [
 export default function NewInspectionPage() {
   const router = useRouter()
   const [lookingUp, setLookingUp] = useState(false)
+  const [templates, setTemplates] = useState<any[]>([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState('')
   const [form, setForm] = useState({
     propertyAddress: '',
     propertyCity: '',
@@ -56,6 +59,16 @@ export default function NewInspectionPage() {
       updateLinks()
     }
   }
+
+  useEffect(() => {
+    // Load templates for selection
+    const loadTemplates = async () => {
+      const supabase = createClient()
+      const { data, error } = await supabase.from('inspection_templates').select('*')
+      if (!error && data) setTemplates(data)
+    }
+    loadTemplates()
+  }, [])
 
   const lookupZip = async (zip: string) => {
     setLookingUp(true)
@@ -135,7 +148,9 @@ export default function NewInspectionPage() {
       <h1 style={{ fontSize: '1.5rem', fontWeight: 600, marginBottom: '1.5rem' }}>New Inspection</h1>
       
       <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem', maxWidth: '600px' }}>
+        {/* Property Address */}
         <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Property Address</h2>
           <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Property Address</h2>
           <input 
             name="propertyAddress" 
@@ -183,6 +198,22 @@ export default function NewInspectionPage() {
           <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.5rem' }}>
             💡 Enter a ZIP code to auto-fill city and state
           </p>
+        </div>
+
+        {/* Template Selection */}
+        <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '1rem' }}>Select Template</h2>
+          <select
+            name="selectedTemplateId"
+            value={selectedTemplateId}
+            onChange={e => setSelectedTemplateId(e.target.value)}
+            style={{ width: '100%', padding: '0.5rem', border: '1px solid #d1d5db', borderRadius: '0.25rem' }}
+          >
+            <option value="">-- Choose a template (optional) --</option>
+            {templates.map(t => (
+              <option key={t.id} value={t.id}>{t.name} ({t.inspection_type})</option>
+            ))}
+          </select>
         </div>
 
         <div style={{ background: '#fff', padding: '1.5rem', borderRadius: '0.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
