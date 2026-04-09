@@ -3,21 +3,16 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Home, FileText, Users, Settings, LogOut, Plus, Search } from 'lucide-react'
-import { createBrowserClientFromParams } from '@/utils/supabase/client'
+import { createClient } from '@/lib/supabase'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const [supabase, setSupabase] = useState<any>(null)
+  const supabase = createClient()
   const [userEmail, setUserEmail] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setSupabase(createBrowserClientFromParams())
-  }, [])
-
-  useEffect(() => {
-    if (!supabase) return
     supabase.auth.getUser().then(({ data }: { data: { user: any } }) => {
       if (!data?.user) {
         router.push('/auth/login')
