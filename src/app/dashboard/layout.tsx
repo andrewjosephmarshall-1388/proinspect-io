@@ -8,18 +8,25 @@ import { createBrowserClientFromParams } from '@/utils/supabase/client'
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createBrowserClientFromParams()
+  const [supabase, setSupabase] = useState<any>(null)
   const [userEmail, setUserEmail] = useState('')
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    setSupabase(createBrowserClientFromParams())
+  }, [])
+
+  useEffect(() => {
+    if (!supabase) return
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
         router.push('/auth/login')
       } else if (user.email) {
         setUserEmail(user.email)
       }
+      setLoading(false)
     })
-  }, [])
+  }, [supabase])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -38,6 +45,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (!email) return 'U'
     const parts = email.split('@')[0].split('.')
     return parts.map(p => p[0]).join('').toUpperCase().slice(0, 2)
+  }
+
+  if (loading || !userEmail) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center' }}>Loading...</div>
+      </div>
+    )
   }
 
   return (
