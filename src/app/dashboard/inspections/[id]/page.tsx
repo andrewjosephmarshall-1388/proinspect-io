@@ -99,6 +99,7 @@ export default function InspectionDetailPage() {
 
     // Generate a PDF report using @react-pdf/renderer
     const generatePdf = async () => {
+      // ... existing generatePdf code ...
       if (!inspection) return
       // Simple PDF layout
       const MyDoc = () => (
@@ -124,7 +125,7 @@ export default function InspectionDetailPage() {
         </Document>
       )
 
-      const blob = await pdf(<MyDoc />).toBlob()
+      const blob = await pdf(renderMyDoc()).toBlob()
       const url = URL.createObjectURL(blob)
       // Open PDF in new tab
       window.open(url, '_blank')
@@ -137,6 +138,68 @@ export default function InspectionDetailPage() {
       itemCategory: { fontWeight: 'bold' }
     })
 
+    // Render function for the PDF document (used by generatePdf and emailReport)
+    const renderMyDoc = () => (
+      <Document>
+        <Page style={styles.page}>
+          <View>
+            <Text style={styles.title}>Inspection Report</Text>
+            <Text>Property: {inspection?.property_address}</Text>
+            <Text>Client: {inspection?.clients?.name || '—'}</Text>
+            <Text>Date: {new Date().toLocaleDateString()}</Text>
+          </View>
+          <View style={{ marginTop: 20 }}>
+            {completedItems.map((it, i) => (
+              <View key={i} style={styles.item}>
+                <Text style={styles.itemCategory}>{it.category}</Text>
+                <Text>{it.item_text}</Text>
+                <Text>Condition: {it.condition || '—'}</Text>
+                <Text>Notes: {it.notes || ''}</Text>
+              </View>
+            ))}
+          </View>
+        </Page>
+      </Document>
+    )
+
+    // Create an invoice record in Supabase (placeholder amount $150)
+    const createInvoice = async () => {
+      if (!inspection) return
+      const supabase = createClient()
+      const { data, error } = await supabase.from('invoices').insert({
+        user_id: inspection.user_id,
+        client_id: inspection.client_id,
+        inspection_id: inspection.id,
+        amount: 150,
+        status: 'pending',
+        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      }).select().single()
+      if (error) {
+        console.error('Invoice error', error)
+        return null
+      }
+      return data
+    }
+
+    // Send email with PDF URL (placeholder – just logs)
+    const emailReport = async (pdfUrl: string) => {
+      if (!inspection) return
+      const response = await fetch('/api/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: inspection.clients?.email || 'client@example.com',
+          subject: `Inspection Report for ${inspection.property_address}`,
+          html: `<p>Please find your inspection report attached.</p><p><a href="${pdfUrl}">View PDF</a></p>`
+        })
+      })
+      const result = await response.json()
+      if (!result.success) {
+        console.error('Email send failed', result)
+      }
+    }
+
+    // After saving report, you can call these functions manually from UI (e.g., add buttons later)
     return (
     <div style={{ padding: '2rem' }}>
       <Link href="/dashboard/inspections" style={{ display: 'block', marginBottom: '1rem', color: '#6b7280' }}>← Back to Inspections</Link>
@@ -229,6 +292,27 @@ export default function InspectionDetailPage() {
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.25rem', background: '#2563eb', color: 'white', border: 'none', cursor: 'pointer' }}
             >
               📄 Generate PDF
+            </button>
+            <button 
+              onClick={async () => {
+                const invoice = await createInvoice()
+                if (invoice) alert('Invoice created (ID: ' + invoice.id + ')')
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.25rem', background: '#10b981', color: 'white', border: 'none', marginLeft: '0.5rem', cursor: 'pointer' }}
+            >
+              💰 Create Invoice
+            </button>
+            <button 
+              onClick={async () => {
+                // Generate PDF first to get URL then email
+                const blob = await pdf(renderMyDoc()).toBlob()
+                const url = URL.createObjectURL(blob)
+                await emailReport(url)
+                alert('Email sent')
+              }}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.25rem', background: '#2563eb', color: 'white', border: 'none', marginLeft: '0.5rem', cursor: 'pointer' }}
+            >
+              📧 Email Report
             </button>
           </div>
         )}
